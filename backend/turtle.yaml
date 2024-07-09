@@ -1,0 +1,12 @@
+endpoints:
+  getReview:
+    method: "GET"
+    url: "http://localhost:8080/review"
+  postReview:
+    method: "POST"
+    url: "http://localhost:8080/review"
+    body: |
+      {
+        "type": "yearly",
+        "year": 2024
+      }
