@@ -5,6 +5,7 @@ go 1.23.1
 require (
 	github.com/99designs/gqlgen v0.17.55
 	github.com/go-sql-driver/mysql v1.8.1
+	github.com/rs/cors v1.11.1
 	github.com/vektah/gqlparser/v2 v2.5.17
 )
 
