@@ -8,21 +8,93 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/google/uuid"
 	"github.com/hokita/owl/graph/model"
 )
+
+// CreateNote is the resolver for the createNote field.
+func (r *mutationResolver) CreateNote(ctx context.Context, input model.CreateNoteInput) (*model.Note, error) {
+	uuid, err := uuid.NewUUID()
+	if err != nil {
+		return nil, err
+	}
+
+	// Start transaction
+	tx, err := r.DB.Begin()
+
+	insertQuery := `
+		INSERT INTO notes (id, review_id, content, type, created_at, updated_at)
+		VALUES (?, ?, ?, ?, NOW(), NOW());
+	`
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = tx.Exec(
+		insertQuery,
+		uuid.String(),
+		input.ReviewID,
+		input.Content,
+		input.Type,
+	)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	var (
+		ID        string
+		ReviewID  string
+		Content   string
+		Type      string
+		CreatedAt string
+		UpdatedAt string
+	)
+	selectQuery := `
+		SELECT
+			id,
+			review_id,
+			content,
+			type,
+			created_at,
+			updated_at
+		FROM
+			notes
+		WHERE
+			id = ?
+	`
+	err = tx.QueryRow(selectQuery, uuid.String()).Scan(&ID, &ReviewID, &Content, &Type, &CreatedAt, &UpdatedAt)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	return &model.Note{
+		ID:        ID,
+		ReviewID:  ReviewID,
+		Content:   Content,
+		Type:      Type,
+		CreatedAt: CreatedAt,
+		UpdatedAt: UpdatedAt,
+	}, nil
+}
 
 // Review is the resolver for the review field.
 func (r *queryResolver) Review(ctx context.Context) (*model.Review, error) {
 	query := `
 		SELECT
 			reviews.id,
-			reviews.type,
 			reviews.year,
 			reviews.month,
 			reviews.week,
 			reviews.created_at,
 			reviews.updated_at,
 			notes.id,
+			notes.review_id,
 			notes.content,
 			notes.type,
 			notes.created_at,
@@ -44,13 +116,13 @@ func (r *queryResolver) Review(ctx context.Context) (*model.Review, error) {
 	for rows.Next() {
 		var (
 			reviewID        string
-			reviewType      string
 			reviewYear      int
-			reviewMonth     *int
-			reviewWeek      *int
+			reviewMonth     int
+			reviewWeek      int
 			reviewCreatedAt string
 			reviewUpdatedAt string
 			noteID          sql.NullString
+			noteReviewID    sql.NullString
 			noteContent     sql.NullString
 			noteType        sql.NullString
 			noteCreatedAt   sql.NullString
@@ -59,13 +131,13 @@ func (r *queryResolver) Review(ctx context.Context) (*model.Review, error) {
 
 		err := rows.Scan(
 			&reviewID,
-			&reviewType,
 			&reviewYear,
 			&reviewMonth,
 			&reviewWeek,
 			&reviewCreatedAt,
 			&reviewUpdatedAt,
 			&noteID,
+			&noteReviewID,
 			&noteContent,
 			&noteType,
 			&noteCreatedAt,
@@ -76,7 +148,6 @@ func (r *queryResolver) Review(ctx context.Context) (*model.Review, error) {
 		}
 		if review.ID == "" {
 			review.ID = reviewID
-			review.Type = reviewType
 			review.Year = reviewYear
 			review.Month = reviewMonth
 			review.Week = reviewWeek
@@ -86,6 +157,7 @@ func (r *queryResolver) Review(ctx context.Context) (*model.Review, error) {
 		if noteID.Valid {
 			note := &model.Note{
 				ID:        noteID.String,
+				ReviewID:  noteReviewID.String,
 				Content:   noteContent.String,
 				Type:      noteType.String,
 				CreatedAt: noteCreatedAt.String,
@@ -98,7 +170,11 @@ func (r *queryResolver) Review(ctx context.Context) (*model.Review, error) {
 	return &review, nil
 }
 
+// Mutation returns MutationResolver implementation.
+func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
+
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
+type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

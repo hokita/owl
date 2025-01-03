@@ -2,8 +2,18 @@
 
 package model
 
+type CreateNoteInput struct {
+	ReviewID string `json:"review_id"`
+	Content  string `json:"content"`
+	Type     string `json:"type"`
+}
+
+type Mutation struct {
+}
+
 type Note struct {
 	ID        string `json:"id"`
+	ReviewID  string `json:"review_id"`
 	Content   string `json:"content"`
 	Type      string `json:"type"`
 	CreatedAt string `json:"created_at"`
@@ -15,10 +25,9 @@ type Query struct {
 
 type Review struct {
 	ID        string  `json:"id"`
-	Type      string  `json:"type"`
 	Year      int     `json:"year"`
-	Month     *int    `json:"month,omitempty"`
-	Week      *int    `json:"week,omitempty"`
+	Month     int     `json:"month"`
+	Week      int     `json:"week"`
 	Notes     []*Note `json:"notes"`
 	CreatedAt string  `json:"created_at"`
 	UpdatedAt string  `json:"updated_at"`

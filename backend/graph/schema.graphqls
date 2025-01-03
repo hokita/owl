@@ -10,10 +10,9 @@ type Query {
 
 type Review {
   id: ID!
-  type: String!
   year: Int!
-  month: Int
-  week: Int
+  month: Int!
+  week: Int!
   notes: [Note!]!
   created_at: DateTime!
   updated_at: DateTime!
@@ -21,8 +20,19 @@ type Review {
 
 type Note {
   id: ID!
+  review_id: ID!
   content: String!
   type: String!
   created_at: DateTime!
   updated_at: DateTime!
+}
+
+input CreateNoteInput {
+  review_id: ID!
+  content: String!
+  type: String!
+}
+
+type Mutation {
+  createNote(input: CreateNoteInput!): Note!
 }
