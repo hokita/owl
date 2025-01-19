@@ -11,6 +11,7 @@ type Query {
 
 type Mutation {
   createNote(input: CreateNoteInput!): Note!
+  deleteNote(id: ID!): Note!
 }
 
 type Review {

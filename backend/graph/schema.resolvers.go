@@ -7,6 +7,7 @@ package graph
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"github.com/google/uuid"
 	"github.com/hokita/owl/graph/model"
@@ -21,14 +22,14 @@ func (r *mutationResolver) CreateNote(ctx context.Context, input model.CreateNot
 
 	// Start transaction
 	tx, err := r.DB.Begin()
+	if err != nil {
+		return nil, err
+	}
 
 	insertQuery := `
 		INSERT INTO notes (id, review_id, content, type, created_at, updated_at)
 		VALUES (?, ?, ?, ?, NOW(), NOW());
 	`
-	if err != nil {
-		return nil, err
-	}
 
 	_, err = tx.Exec(
 		insertQuery,
@@ -75,6 +76,69 @@ func (r *mutationResolver) CreateNote(ctx context.Context, input model.CreateNot
 
 	return &model.Note{
 		ID:        ID,
+		ReviewID:  ReviewID,
+		Content:   Content,
+		Type:      Type,
+		CreatedAt: CreatedAt,
+		UpdatedAt: UpdatedAt,
+	}, nil
+}
+
+// DeleteNote is the resolver for the deleteNote field.
+func (r *mutationResolver) DeleteNote(ctx context.Context, id string) (*model.Note, error) {
+	// Start transaction
+	tx, err := r.DB.Begin()
+	if err != nil {
+		return nil, err
+	}
+
+	// Select
+	var (
+		NoteID    string
+		ReviewID  string
+		Content   string
+		Type      string
+		CreatedAt string
+		UpdatedAt string
+	)
+	selectQuery := `
+		SELECT
+			id,
+			review_id,
+			content,
+			type,
+			created_at,
+			updated_at
+		FROM
+			notes
+		WHERE
+			id = ?
+	`
+	err = tx.QueryRow(selectQuery, id).Scan(&NoteID, &ReviewID, &Content, &Type, &CreatedAt, &UpdatedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.New("Note not found")
+		}
+		tx.Rollback()
+		return nil, err
+	}
+
+	// Delete
+	deleteQuery := `
+		DELETE FROM notes WHERE id = ?;
+	`
+	_, err = tx.Exec(deleteQuery, id)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	return &model.Note{
+		ID:        NoteID,
 		ReviewID:  ReviewID,
 		Content:   Content,
 		Type:      Type,
