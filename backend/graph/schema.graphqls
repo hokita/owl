@@ -6,6 +6,11 @@ scalar DateTime
 
 type Query {
   review: Review
+  weekReview(year: Int!, month: Int!, week: Int!): Review
+}
+
+type Mutation {
+  createNote(input: CreateNoteInput!): Note!
 }
 
 type Review {
@@ -31,8 +36,4 @@ input CreateNoteInput {
   review_id: ID!
   content: String!
   type: String!
-}
-
-type Mutation {
-  createNote(input: CreateNoteInput!): Note!
 }

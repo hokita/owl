@@ -170,6 +170,100 @@ func (r *queryResolver) Review(ctx context.Context) (*model.Review, error) {
 	return &review, nil
 }
 
+// WeekReview is the resolver for the weekReview field.
+func (r *queryResolver) WeekReview(ctx context.Context, year int, month int, week int) (*model.Review, error) {
+	query := `
+		SELECT
+			reviews.id,
+			reviews.year,
+			reviews.month,
+			reviews.week,
+			reviews.created_at,
+			reviews.updated_at,
+			notes.id,
+			notes.review_id,
+			notes.content,
+			notes.type,
+			notes.created_at,
+			notes.updated_at
+		FROM
+			reviews
+		JOIN
+			notes
+		ON reviews.id = notes.review_id
+		WHERE
+		    reviews.year = ? AND
+			reviews.month = ? AND
+			reviews.week = ?
+	`
+	rows, error := r.DB.Query(query, year, month, week)
+	if error != nil {
+		return nil, error
+	}
+	defer rows.Close()
+
+	review := model.Review{}
+	notesMap := make(map[string]*model.Note)
+	for rows.Next() {
+		var (
+			reviewID        string
+			reviewYear      int
+			reviewMonth     int
+			reviewWeek      int
+			reviewCreatedAt string
+			reviewUpdatedAt string
+			noteID          sql.NullString
+			noteReviewID    sql.NullString
+			noteContent     sql.NullString
+			noteType        sql.NullString
+			noteCreatedAt   sql.NullString
+			noteUpdatedAt   sql.NullString
+		)
+
+		err := rows.Scan(
+			&reviewID,
+			&reviewYear,
+			&reviewMonth,
+			&reviewWeek,
+			&reviewCreatedAt,
+			&reviewUpdatedAt,
+			&noteID,
+			&noteReviewID,
+			&noteContent,
+			&noteType,
+			&noteCreatedAt,
+			&noteUpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		if review.ID == "" {
+			review.ID = reviewID
+			review.Year = reviewYear
+			review.Month = reviewMonth
+			review.Week = reviewWeek
+			review.CreatedAt = reviewCreatedAt
+			review.UpdatedAt = reviewUpdatedAt
+		}
+		if noteID.Valid {
+			note := &model.Note{
+				ID:        noteID.String,
+				ReviewID:  noteReviewID.String,
+				Content:   noteContent.String,
+				Type:      noteType.String,
+				CreatedAt: noteCreatedAt.String,
+				UpdatedAt: noteUpdatedAt.String,
+			}
+			notesMap[noteID.String] = note
+			review.Notes = append(review.Notes, note)
+		}
+	}
+	if review.ID == "" {
+		return nil, nil
+	}
+	return &review, nil
+}
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
