@@ -1,0 +1,39 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+scalar DateTime
+
+type Query {
+	review: Review
+	weekReview(year: Int!, month: Int!, week: Int!): Review
+}
+
+type Review {
+	id: ID!
+	year: Int!
+	month: Int!
+	week: Int!
+	notes: [Note!]!
+	created_at: DateTime!
+	updated_at: DateTime!
+}
+
+type Note {
+	id: ID!
+	review_id: ID!
+	content: String!
+	type: String!
+	created_at: DateTime!
+	updated_at: DateTime!
+}
+
+input CreateNoteInput {
+	review_id: ID!
+	content: String!
+	type: String!
+}
+
+type Mutation {
+	createNote(input: CreateNoteInput!): Note!
+}
