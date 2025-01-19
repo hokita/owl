@@ -21,7 +21,7 @@ func (r *mutationResolver) CreateNote(ctx context.Context, input model.CreateNot
 	}
 
 	// Start transaction
-	tx, err := r.DB.Begin()
+	tx, err := r.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +31,8 @@ func (r *mutationResolver) CreateNote(ctx context.Context, input model.CreateNot
 		VALUES (?, ?, ?, ?, NOW(), NOW());
 	`
 
-	_, err = tx.Exec(
+	_, err = tx.ExecContext(
+		ctx,
 		insertQuery,
 		uuid.String(),
 		input.ReviewID,
@@ -64,7 +65,18 @@ func (r *mutationResolver) CreateNote(ctx context.Context, input model.CreateNot
 		WHERE
 			id = ?
 	`
-	err = tx.QueryRow(selectQuery, uuid.String()).Scan(&ID, &ReviewID, &Content, &Type, &CreatedAt, &UpdatedAt)
+	err = tx.QueryRowContext(
+		ctx,
+		selectQuery,
+		uuid.String(),
+	).Scan(
+		&ID,
+		&ReviewID,
+		&Content,
+		&Type,
+		&CreatedAt,
+		&UpdatedAt,
+	)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -87,7 +99,7 @@ func (r *mutationResolver) CreateNote(ctx context.Context, input model.CreateNot
 // DeleteNote is the resolver for the deleteNote field.
 func (r *mutationResolver) DeleteNote(ctx context.Context, id string) (*model.Note, error) {
 	// Start transaction
-	tx, err := r.DB.Begin()
+	tx, err := r.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +126,18 @@ func (r *mutationResolver) DeleteNote(ctx context.Context, id string) (*model.No
 		WHERE
 			id = ?
 	`
-	err = tx.QueryRow(selectQuery, id).Scan(&NoteID, &ReviewID, &Content, &Type, &CreatedAt, &UpdatedAt)
+	err = tx.QueryRowContext(
+		ctx,
+		selectQuery,
+		id,
+	).Scan(
+		&NoteID,
+		&ReviewID,
+		&Content,
+		&Type,
+		&CreatedAt,
+		&UpdatedAt,
+	)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.New("Note not found")
@@ -127,7 +150,7 @@ func (r *mutationResolver) DeleteNote(ctx context.Context, id string) (*model.No
 	deleteQuery := `
 		DELETE FROM notes WHERE id = ?;
 	`
-	_, err = tx.Exec(deleteQuery, id)
+	_, err = tx.ExecContext(ctx, deleteQuery, id)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -169,7 +192,7 @@ func (r *queryResolver) Review(ctx context.Context) (*model.Review, error) {
 			notes
 		ON reviews.id = notes.review_id
 	`
-	rows, error := r.DB.Query(query)
+	rows, error := r.DB.QueryContext(ctx, query)
 	if error != nil {
 		return nil, error
 	}
@@ -260,7 +283,7 @@ func (r *queryResolver) WeekReview(ctx context.Context, year int, month int, wee
 			reviews.month = ? AND
 			reviews.week = ?
 	`
-	rows, error := r.DB.Query(query, year, month, week)
+	rows, error := r.DB.QueryContext(ctx, query, year, month, week)
 	if error != nil {
 		return nil, error
 	}
