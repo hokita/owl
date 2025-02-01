@@ -16,6 +16,9 @@ import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-
 const documents = {
     "\n  fragment ReviewFields on Review {\n    id\n    year\n    month\n    week\n    notes {\n      ...NoteFields\n    }\n  }\n": types.ReviewFieldsFragmentDoc,
     "\n  fragment NoteFields on Note {\n    id\n    type\n    content\n  }\n": types.NoteFieldsFragmentDoc,
+    "\n  mutation CreateReview($input: CreateReviewInput!) {\n    createReview(input: $input) {\n      id\n      year\n      month\n      week\n      created_at\n      updated_at\n    }\n  }\n": types.CreateReviewDocument,
+    "\n  mutation CreateNote($input: CreateNoteInput!) {\n    createNote(input: $input) {\n      id\n      review_id\n      content\n      type\n      created_at\n      updated_at\n    }\n  }\n": types.CreateNoteDocument,
+    "\n  mutation DeleteNote($id: ID!) {\n    deleteNote(id: $id) {\n      id\n      content\n      type\n      created_at\n      updated_at\n    }\n  }\n": types.DeleteNoteDocument,
     "\n  query GetWeekReview($year: Int!, $month: Int!, $week: Int!) {\n    weekReview(year: $year, month: $month, week: $week) {\n      ...ReviewFields\n    }\n  }\n": types.GetWeekReviewDocument,
 };
 
@@ -41,6 +44,18 @@ export function graphql(source: "\n  fragment ReviewFields on Review {\n    id\n
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  fragment NoteFields on Note {\n    id\n    type\n    content\n  }\n"): (typeof documents)["\n  fragment NoteFields on Note {\n    id\n    type\n    content\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateReview($input: CreateReviewInput!) {\n    createReview(input: $input) {\n      id\n      year\n      month\n      week\n      created_at\n      updated_at\n    }\n  }\n"): (typeof documents)["\n  mutation CreateReview($input: CreateReviewInput!) {\n    createReview(input: $input) {\n      id\n      year\n      month\n      week\n      created_at\n      updated_at\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateNote($input: CreateNoteInput!) {\n    createNote(input: $input) {\n      id\n      review_id\n      content\n      type\n      created_at\n      updated_at\n    }\n  }\n"): (typeof documents)["\n  mutation CreateNote($input: CreateNoteInput!) {\n    createNote(input: $input) {\n      id\n      review_id\n      content\n      type\n      created_at\n      updated_at\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeleteNote($id: ID!) {\n    deleteNote(id: $id) {\n      id\n      content\n      type\n      created_at\n      updated_at\n    }\n  }\n"): (typeof documents)["\n  mutation DeleteNote($id: ID!) {\n    deleteNote(id: $id) {\n      id\n      content\n      type\n      created_at\n      updated_at\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
