@@ -10,6 +10,7 @@ type Query {
 }
 
 type Mutation {
+  createReview(input: CreateReviewInput!): Review!
   createNote(input: CreateNoteInput!): Note!
   deleteNote(id: ID!): Note!
 }
@@ -31,6 +32,18 @@ type Note {
   type: String!
   created_at: DateTime!
   updated_at: DateTime!
+}
+
+input CreateReviewNoteInput {
+  content: String!
+  type: String!
+}
+
+input CreateReviewInput {
+  year: Int!
+  month: Int
+  week: Int
+  notes: [CreateReviewNoteInput!]!
 }
 
 input CreateNoteInput {

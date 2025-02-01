@@ -8,6 +8,18 @@ type CreateNoteInput struct {
 	Type     string `json:"type"`
 }
 
+type CreateReviewInput struct {
+	Year  int                      `json:"year"`
+	Month *int                     `json:"month,omitempty"`
+	Week  *int                     `json:"week,omitempty"`
+	Notes []*CreateReviewNoteInput `json:"notes"`
+}
+
+type CreateReviewNoteInput struct {
+	Content string `json:"content"`
+	Type    string `json:"type"`
+}
+
 type Mutation struct {
 }
 

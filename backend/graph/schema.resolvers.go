@@ -8,10 +8,176 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/hokita/owl/graph/model"
 )
+
+// CreateReview is the resolver for the createReview field.
+func (r *mutationResolver) CreateReview(ctx context.Context, input model.CreateReviewInput) (*model.Review, error) {
+	reviewUUID, err := uuid.NewUUID()
+	if err != nil {
+		return nil, err
+	}
+
+	if input.Month == nil {
+		input.Month = new(int)
+	}
+
+	if input.Week == nil {
+		input.Week = new(int)
+	}
+
+	// Start transaction
+	tx, err := r.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// Insert review
+	insertReviewQuery := `
+		INSERT INTO reviews (id, year, month, week, created_at, updated_at)
+		VALUES (?, ?, ?, ?, NOW(), NOW());
+	`
+
+	_, err = tx.ExecContext(
+		ctx,
+		insertReviewQuery,
+		reviewUUID.String(),
+		input.Year,
+		input.Month,
+		input.Week,
+	)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	valueStrings := []string{}
+	valueArgs := []interface{}{}
+	for _, note := range input.Notes {
+		noteUUID, err := uuid.NewUUID()
+		if err != nil {
+			return nil, err
+		}
+
+		valueStrings = append(valueStrings, "(?, ?, ?, ?, NOW(), NOW())")
+		valueArgs = append(valueArgs, noteUUID.String(), reviewUUID.String(), note.Content, note.Type)
+	}
+
+	// Insert notes
+	insertNotesQuery := fmt.Sprintf(`
+		INSERT INTO notes (id, review_id, content, type, created_at, updated_at)
+		VALUES %s;
+	`, strings.Join(valueStrings, ","))
+
+	_, err = tx.ExecContext(
+		ctx,
+		insertNotesQuery,
+		valueArgs...,
+	)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	selectQuery := `
+		SELECT
+			reviews.id,
+			reviews.year,
+			reviews.month,
+			reviews.week,
+			reviews.created_at,
+			reviews.updated_at,
+			notes.id,
+			notes.review_id,
+			notes.content,
+			notes.type,
+			notes.created_at,
+			notes.updated_at
+		FROM
+			reviews
+		JOIN
+			notes
+		ON reviews.id = notes.review_id
+		WHERE
+		    reviews.id = ?
+	`
+	rows, error := tx.QueryContext(ctx, selectQuery, reviewUUID.String())
+	if error != nil {
+		return nil, error
+	}
+	defer rows.Close()
+
+	review := model.Review{}
+	notesMap := make(map[string]*model.Note)
+	for rows.Next() {
+		var (
+			reviewID        string
+			reviewYear      int
+			reviewMonth     int
+			reviewWeek      int
+			reviewCreatedAt string
+			reviewUpdatedAt string
+			noteID          sql.NullString
+			noteReviewID    sql.NullString
+			noteContent     sql.NullString
+			noteType        sql.NullString
+			noteCreatedAt   sql.NullString
+			noteUpdatedAt   sql.NullString
+		)
+
+		err := rows.Scan(
+			&reviewID,
+			&reviewYear,
+			&reviewMonth,
+			&reviewWeek,
+			&reviewCreatedAt,
+			&reviewUpdatedAt,
+			&noteID,
+			&noteReviewID,
+			&noteContent,
+			&noteType,
+			&noteCreatedAt,
+			&noteUpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		if review.ID == "" {
+			review.ID = reviewID
+			review.Year = reviewYear
+			review.Month = reviewMonth
+			review.Week = reviewWeek
+			review.CreatedAt = reviewCreatedAt
+			review.UpdatedAt = reviewUpdatedAt
+		}
+		if noteID.Valid {
+			note := &model.Note{
+				ID:        noteID.String,
+				ReviewID:  noteReviewID.String,
+				Content:   noteContent.String,
+				Type:      noteType.String,
+				CreatedAt: noteCreatedAt.String,
+				UpdatedAt: noteUpdatedAt.String,
+			}
+			notesMap[noteID.String] = note
+			review.Notes = append(review.Notes, note)
+		}
+	}
+	if review.ID == "" {
+		return nil, nil
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	return &review, nil
+}
 
 // CreateNote is the resolver for the createNote field.
 func (r *mutationResolver) CreateNote(ctx context.Context, input model.CreateNoteInput) (*model.Note, error) {
@@ -275,7 +441,7 @@ func (r *queryResolver) WeekReview(ctx context.Context, year int, month int, wee
 			notes.updated_at
 		FROM
 			reviews
-		JOIN
+		LEFT JOIN
 			notes
 		ON reviews.id = notes.review_id
 		WHERE
