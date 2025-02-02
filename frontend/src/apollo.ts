@@ -1,7 +1,7 @@
 import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client/core";
 
 const httpLink = new HttpLink({
-  uri: "http://localhost:8080/query", // Replace with your GraphQL endpoint
+  uri: import.meta.env.VITE_BACKEND_URL, // Replace with your GraphQL endpoint
 });
 
 const cache = new InMemoryCache();
