@@ -80,9 +80,9 @@ func main() {
 
 	if env == "development" {
 		http.Handle("/", playground.Handler("GraphQL playground", "/query"))
+		log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	}
 	http.Handle("/query", c.Handler(srv))
-
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
+	log.Println("start server")
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
