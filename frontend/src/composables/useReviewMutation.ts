@@ -4,6 +4,8 @@ import type {
   CreateNoteMutationVariables,
   CreateReviewMutation,
   CreateReviewMutationVariables,
+  DeleteNoteMutation,
+  DeleteNoteMutationVariables,
 } from "@/gql/graphql";
 import { CreateReview, CreateNote, DeleteNote } from "@/graphql/mutations";
 
@@ -20,7 +22,7 @@ const useReviewMutation = () => {
     onDone: onDeleteNoteDone,
     onError: onDeleteNoteError,
     error: deleteNoteError,
-  } = useMutation<CreateNoteMutation, CreateNoteMutationVariables>(DeleteNote);
+  } = useMutation<DeleteNoteMutation, DeleteNoteMutationVariables>(DeleteNote);
 
   const {
     mutate: create,
@@ -28,7 +30,7 @@ const useReviewMutation = () => {
     onError: onCreateError,
     error: createError,
   } = useMutation<CreateReviewMutation, CreateReviewMutationVariables>(
-    CreateReview
+    CreateReview,
   );
 
   return {

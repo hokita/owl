@@ -9,6 +9,11 @@ const router = createRouter({
       name: "home",
       component: HomeView,
     },
+    {
+      path: "/:year(\\d{4})/:month([1-12])/:week([1-5])",
+      name: "weekPage",
+      component: HomeView,
+    },
   ],
 });
 

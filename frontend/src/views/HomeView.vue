@@ -151,20 +151,37 @@
 import { ref } from "vue";
 import useReviewQuery from "@/composables/useReviewQuery";
 import useReviewMutation from "@/composables/useReviewMutation";
+import { useRoute, useRouter } from "vue-router";
 
+const route = useRoute();
+const router = useRouter();
 const today = new Date();
 
+let yearParam = route.params.year;
+let monthParam = route.params.month;
+let weekParam = route.params.week;
+
+if (Array.isArray(yearParam)) {
+  yearParam = yearParam[0];
+}
+if (Array.isArray(monthParam)) {
+  monthParam = monthParam[0];
+}
+if (Array.isArray(weekParam)) {
+  weekParam = weekParam[0];
+}
+
 const newNoteContent = ref("");
-const year = ref(today.getFullYear());
-const month = ref(today.getMonth() + 1);
-const week = ref(1);
+const year = ref(parseInt(yearParam, 10) || today.getFullYear());
+const month = ref(parseInt(monthParam, 10) || today.getMonth() + 1);
+const week = ref(parseInt(weekParam, 10) || 1);
 const type = ref("event");
 const errorMessage = ref("");
 
 const { review, refetch, eventNotes, learnNotes, nextNotes } = useReviewQuery(
-  year,
-  month,
-  week,
+  year.value,
+  month.value,
+  week.value,
 );
 
 const {
@@ -191,7 +208,7 @@ onCreateReviewDone(({ data }) => {
 
 onCreateReviewError((mutationError) => {
   console.error(mutationError);
-  errorMessage.value = createReviewError;
+  errorMessage.value = createReviewError.value?.message ?? "";
 });
 
 onCreateNoteDone(({ data }) => {
@@ -203,7 +220,7 @@ onCreateNoteDone(({ data }) => {
 
 onCreateNoteError((mutationError) => {
   console.error(mutationError);
-  errorMessage.value = createNoteError;
+  errorMessage.value = createNoteError.value?.message ?? "";
 });
 
 onDeleteNoteDone(({ data }) => {
@@ -214,7 +231,7 @@ onDeleteNoteDone(({ data }) => {
 
 onDeleteNoteError((mutationError) => {
   console.error(mutationError);
-  errorMessage.value = deleteNoteError;
+  errorMessage.value = deleteNoteError.value?.message ?? "";
 });
 
 const onClickAddNote = () => {
@@ -254,10 +271,13 @@ const onClickDeleteNote = (id: string) => {
 };
 
 const onChangeDate = () => {
-  refetch({
-    year: year.value,
-    month: month.value,
-    week: week.value,
+  router.push({
+    name: "weekPage",
+    params: {
+      year: year.value.toString(),
+      month: month.value.toString(),
+      week: week.value.toString(),
+    },
   });
 };
 </script>
