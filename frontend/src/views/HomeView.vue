@@ -181,7 +181,7 @@ const errorMessage = ref("");
 const { review, refetch, eventNotes, learnNotes, nextNotes } = useReviewQuery(
   year.value,
   month.value,
-  week.value,
+  week.value
 );
 
 const {
@@ -271,6 +271,12 @@ const onClickDeleteNote = (id: string) => {
 };
 
 const onChangeDate = () => {
+  refetch({
+    year: year.value,
+    month: month.value,
+    week: week.value,
+  });
+
   router.push({
     name: "weekPage",
     params: {
