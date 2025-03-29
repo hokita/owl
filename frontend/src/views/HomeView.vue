@@ -181,7 +181,7 @@ const errorMessage = ref("");
 const { review, refetch, eventNotes, learnNotes, nextNotes } = useReviewQuery(
   year.value,
   month.value,
-  week.value
+  week.value,
 );
 
 const {
