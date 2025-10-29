@@ -1,8 +1,8 @@
 import { graphql } from "@/gql";
 
-export const GetWeekReview = graphql(`
-  query GetWeekReview($year: Int!, $month: Int!, $week: Int!) {
-    weekReview(year: $year, month: $month, week: $week) {
+export const GetMonthReview = graphql(`
+  query GetMonthReview($year: Int!, $month: Int!) {
+    monthReview(year: $year, month: $month) {
       ...ReviewFields
     }
   }

@@ -6,7 +6,6 @@ export const CreateReview = graphql(`
       id
       year
       month
-      week
       created_at
       updated_at
     }

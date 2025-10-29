@@ -6,7 +6,7 @@ scalar DateTime
 
 type Query {
   review: Review
-  weekReview(year: Int!, month: Int!, week: Int!): Review
+  monthReview(year: Int!, month: Int!): Review
 }
 
 type Mutation {
@@ -19,7 +19,6 @@ type Review {
   id: ID!
   year: Int!
   month: Int!
-  week: Int!
   notes: [Note!]!
   created_at: DateTime!
   updated_at: DateTime!
@@ -41,8 +40,7 @@ input CreateReviewNoteInput {
 
 input CreateReviewInput {
   year: Int!
-  month: Int
-  week: Int
+  month: Int!
   notes: [CreateReviewNoteInput!]!
 }
 

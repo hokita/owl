@@ -22,14 +22,6 @@ func (r *mutationResolver) CreateReview(ctx context.Context, input model.CreateR
 		return nil, err
 	}
 
-	if input.Month == nil {
-		input.Month = new(int)
-	}
-
-	if input.Week == nil {
-		input.Week = new(int)
-	}
-
 	// Start transaction
 	tx, err := r.DB.BeginTx(ctx, nil)
 	if err != nil {
@@ -38,8 +30,8 @@ func (r *mutationResolver) CreateReview(ctx context.Context, input model.CreateR
 
 	// Insert review
 	insertReviewQuery := `
-		INSERT INTO reviews (id, year, month, week, created_at, updated_at)
-		VALUES (?, ?, ?, ?, NOW(), NOW());
+		INSERT INTO reviews (id, year, month, created_at, updated_at)
+		VALUES (?, ?, ?, NOW(), NOW());
 	`
 
 	_, err = tx.ExecContext(
@@ -48,7 +40,6 @@ func (r *mutationResolver) CreateReview(ctx context.Context, input model.CreateR
 		reviewUUID.String(),
 		input.Year,
 		input.Month,
-		input.Week,
 	)
 	if err != nil {
 		tx.Rollback()
@@ -88,7 +79,6 @@ func (r *mutationResolver) CreateReview(ctx context.Context, input model.CreateR
 			reviews.id,
 			reviews.year,
 			reviews.month,
-			reviews.week,
 			reviews.created_at,
 			reviews.updated_at,
 			notes.id,
@@ -118,7 +108,6 @@ func (r *mutationResolver) CreateReview(ctx context.Context, input model.CreateR
 			reviewID        string
 			reviewYear      int
 			reviewMonth     int
-			reviewWeek      int
 			reviewCreatedAt string
 			reviewUpdatedAt string
 			noteID          sql.NullString
@@ -133,7 +122,6 @@ func (r *mutationResolver) CreateReview(ctx context.Context, input model.CreateR
 			&reviewID,
 			&reviewYear,
 			&reviewMonth,
-			&reviewWeek,
 			&reviewCreatedAt,
 			&reviewUpdatedAt,
 			&noteID,
@@ -151,7 +139,6 @@ func (r *mutationResolver) CreateReview(ctx context.Context, input model.CreateR
 			review.ID = reviewID
 			review.Year = reviewYear
 			review.Month = reviewMonth
-			review.Week = reviewWeek
 			review.CreatedAt = reviewCreatedAt
 			review.UpdatedAt = reviewUpdatedAt
 		}
@@ -343,7 +330,6 @@ func (r *queryResolver) Review(ctx context.Context) (*model.Review, error) {
 			reviews.id,
 			reviews.year,
 			reviews.month,
-			reviews.week,
 			reviews.created_at,
 			reviews.updated_at,
 			notes.id,
@@ -371,7 +357,6 @@ func (r *queryResolver) Review(ctx context.Context) (*model.Review, error) {
 			reviewID        string
 			reviewYear      int
 			reviewMonth     int
-			reviewWeek      int
 			reviewCreatedAt string
 			reviewUpdatedAt string
 			noteID          sql.NullString
@@ -386,7 +371,6 @@ func (r *queryResolver) Review(ctx context.Context) (*model.Review, error) {
 			&reviewID,
 			&reviewYear,
 			&reviewMonth,
-			&reviewWeek,
 			&reviewCreatedAt,
 			&reviewUpdatedAt,
 			&noteID,
@@ -403,7 +387,6 @@ func (r *queryResolver) Review(ctx context.Context) (*model.Review, error) {
 			review.ID = reviewID
 			review.Year = reviewYear
 			review.Month = reviewMonth
-			review.Week = reviewWeek
 			review.CreatedAt = reviewCreatedAt
 			review.UpdatedAt = reviewUpdatedAt
 		}
@@ -423,14 +406,13 @@ func (r *queryResolver) Review(ctx context.Context) (*model.Review, error) {
 	return &review, nil
 }
 
-// WeekReview is the resolver for the weekReview field.
-func (r *queryResolver) WeekReview(ctx context.Context, year int, month int, week int) (*model.Review, error) {
+// MonthReview is the resolver for the monthReview field.
+func (r *queryResolver) MonthReview(ctx context.Context, year int, month int) (*model.Review, error) {
 	query := `
 		SELECT
 			reviews.id,
 			reviews.year,
 			reviews.month,
-			reviews.week,
 			reviews.created_at,
 			reviews.updated_at,
 			notes.id,
@@ -446,10 +428,9 @@ func (r *queryResolver) WeekReview(ctx context.Context, year int, month int, wee
 		ON reviews.id = notes.review_id
 		WHERE
 		    reviews.year = ? AND
-			reviews.month = ? AND
-			reviews.week = ?
+			reviews.month = ?
 	`
-	rows, error := r.DB.QueryContext(ctx, query, year, month, week)
+	rows, error := r.DB.QueryContext(ctx, query, year, month)
 	if error != nil {
 		return nil, error
 	}
@@ -462,7 +443,6 @@ func (r *queryResolver) WeekReview(ctx context.Context, year int, month int, wee
 			reviewID        string
 			reviewYear      int
 			reviewMonth     int
-			reviewWeek      int
 			reviewCreatedAt string
 			reviewUpdatedAt string
 			noteID          sql.NullString
@@ -477,7 +457,6 @@ func (r *queryResolver) WeekReview(ctx context.Context, year int, month int, wee
 			&reviewID,
 			&reviewYear,
 			&reviewMonth,
-			&reviewWeek,
 			&reviewCreatedAt,
 			&reviewUpdatedAt,
 			&noteID,
@@ -494,7 +473,6 @@ func (r *queryResolver) WeekReview(ctx context.Context, year int, month int, wee
 			review.ID = reviewID
 			review.Year = reviewYear
 			review.Month = reviewMonth
-			review.Week = reviewWeek
 			review.CreatedAt = reviewCreatedAt
 			review.UpdatedAt = reviewUpdatedAt
 		}

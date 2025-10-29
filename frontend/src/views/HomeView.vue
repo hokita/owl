@@ -34,21 +34,6 @@
               {{ m }}
             </option>
           </select>
-          <span class="ml-1 hidden sm:inline">-</span>
-        </div>
-
-        <!-- Week -->
-        <div class="flex items-center">
-          <select
-            v-model="week"
-            class="border border-gray-300 rounded px-2 py-1 w-full sm:w-auto"
-            @change="onChangeDate"
-          >
-            <option disabled value="">Week</option>
-            <option v-for="w in 5" :key="w" :value="w">
-              {{ w }}
-            </option>
-          </select>
         </div>
       </div>
 
@@ -159,7 +144,6 @@ const today = new Date();
 
 let yearParam = route.params.year;
 let monthParam = route.params.month;
-let weekParam = route.params.week;
 
 if (Array.isArray(yearParam)) {
   yearParam = yearParam[0];
@@ -167,21 +151,16 @@ if (Array.isArray(yearParam)) {
 if (Array.isArray(monthParam)) {
   monthParam = monthParam[0];
 }
-if (Array.isArray(weekParam)) {
-  weekParam = weekParam[0];
-}
 
 const newNoteContent = ref("");
 const year = ref(parseInt(yearParam, 10) || today.getFullYear());
 const month = ref(parseInt(monthParam, 10) || today.getMonth() + 1);
-const week = ref(parseInt(weekParam, 10) || 1);
 const type = ref("event");
 const errorMessage = ref("");
 
 const { review, refetch, eventNotes, learnNotes, nextNotes } = useReviewQuery(
   year.value,
   month.value,
-  week.value,
 );
 
 const {
@@ -245,7 +224,6 @@ const onClickAddNote = () => {
     const input = {
       year: year.value,
       month: month.value,
-      week: week.value,
       notes: [
         {
           content: newNoteContent.value,
@@ -274,15 +252,13 @@ const onChangeDate = () => {
   refetch({
     year: year.value,
     month: month.value,
-    week: week.value,
   });
 
   router.push({
-    name: "weekPage",
+    name: "monthPage",
     params: {
       year: year.value.toString(),
       month: month.value.toString(),
-      week: week.value.toString(),
     },
   });
 };

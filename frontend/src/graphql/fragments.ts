@@ -5,7 +5,6 @@ export const ReviewFields = graphql(`
     id
     year
     month
-    week
     notes {
       ...NoteFields
     }

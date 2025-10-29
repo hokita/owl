@@ -10,8 +10,7 @@ type CreateNoteInput struct {
 
 type CreateReviewInput struct {
 	Year  int                      `json:"year"`
-	Month *int                     `json:"month,omitempty"`
-	Week  *int                     `json:"week,omitempty"`
+	Month int                      `json:"month"`
 	Notes []*CreateReviewNoteInput `json:"notes"`
 }
 
@@ -39,7 +38,6 @@ type Review struct {
 	ID        string  `json:"id"`
 	Year      int     `json:"year"`
 	Month     int     `json:"month"`
-	Week      int     `json:"week"`
 	Notes     []*Note `json:"notes"`
 	CreatedAt string  `json:"created_at"`
 	UpdatedAt string  `json:"updated_at"`

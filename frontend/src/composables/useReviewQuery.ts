@@ -1,21 +1,20 @@
 import { computed } from "vue";
 import type { ComputedRef } from "vue";
 import { useQuery } from "@vue/apollo-composable";
-import { GetWeekReview } from "@/graphql/queries";
+import { GetMonthReview } from "@/graphql/queries";
 import { useFragment } from "@/gql/fragment-masking";
 import { ReviewFields, NoteFields } from "@/graphql/fragments";
 import type { ReviewFieldsFragment, NoteFieldsFragment } from "@/gql/graphql";
 
-const useReviewQuery = (year: number, month: number, week: number) => {
+const useReviewQuery = (year: number, month: number) => {
   // Graphql
-  const { result, refetch } = useQuery(GetWeekReview, {
+  const { result, refetch } = useQuery(GetMonthReview, {
     year: year,
     month: month,
-    week: week,
   });
 
   const review = computed((): ReviewFieldsFragment | undefined =>
-    useFragment(ReviewFields, result.value?.weekReview ?? undefined),
+    useFragment(ReviewFields, result.value?.monthReview ?? undefined),
   );
 
   const notes = computed(

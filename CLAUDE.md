@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Owl is a weekly review application with a Go/GraphQL backend and Vue 3 frontend. The application allows users to create and manage weekly reviews with associated notes.
+Owl is a monthly review application with a Go/GraphQL backend and Vue 3 frontend. The application allows users to create and manage monthly reviews with associated notes.
 
 ## Architecture
 
@@ -56,7 +56,7 @@ GraphQL types are auto-generated from the backend schema:
 
 The application manages two main entities:
 
-- **Review**: Represents a weekly review (year, month, week) with multiple notes
+- **Review**: Represents a monthly review (year, month) with multiple notes
 - **Note**: Individual notes within a review, each with content and type
 
 ## Common Development Commands
@@ -133,7 +133,7 @@ When modifying the GraphQL schema:
 ## Database Schema
 
 The application uses MySQL with these tables:
-- `reviews`: id (UUID), year, month, week, created_at, updated_at
+- `reviews`: id (UUID), year, month, created_at, updated_at
 - `notes`: id (UUID), review_id (foreign key), content, type, created_at, updated_at
 
 Database queries are written in raw SQL (no ORM). Look at `backend/graph/schema.resolvers.go` for examples.
